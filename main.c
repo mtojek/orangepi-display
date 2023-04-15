@@ -6,13 +6,15 @@
 #include <limits.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <dirent.h>
 
 void toggleBacklight(void) {
 	FILE* fd;
 
+  // bl_power: /sys/class/backlight/fb_ili9341/bl_power
   // Read current state
-  if ((fd = fopen("/sys/class/backlight/fb_ili9341/bl_power", "r")) == NULL) {
-    fprintf(stderr, "Unable to read bl_power\n");
+  if ((fd = fopen("/sys/class/pwm/pwmchip0/pwm2/enable", "r")) == NULL) {
+    fprintf(stderr, "Unable to read pwm2/enable\n");
     return;
   }
 
@@ -23,15 +25,21 @@ void toggleBacklight(void) {
   state = (state - 0x30) ? 0 : 1;
 
   // Write new state
-  if ((fd = fopen("/sys/class/backlight/fb_ili9341/bl_power", "w")) == NULL) {
-  	fprintf(stderr, "Unable to write to bl_power\n");
+  if ((fd = fopen("/sys/class/pwm/pwmchip0/pwm2/enable", "w")) == NULL) {
+  	fprintf(stderr, "Unable to write to pwm2/enable\n");
   	return;
  	}
 	fprintf(fd, "%d\n", state);
   fclose(fd);
 }
 
-#define DEBOUNCE_TIME 150
+void backlightStepUp(void) {
+}
+
+void backlightStepDown(void) {
+}
+
+#define DEBOUNCE_TIME 500
 
 int debounceTimes[] = {0, 0, 0, 0};
 
@@ -63,6 +71,7 @@ void button2(void) {
   }
 
   printf("Button 2 pressed\n");
+  backlightStepUp();
 }
 
 void button3(void) {
@@ -71,6 +80,7 @@ void button3(void) {
   }
 
   printf("Button 3 pressed\n");
+  backlightStepDown();
 }
 
 void button4(void) {
@@ -86,7 +96,38 @@ void (*buttonFunctions[])(void) = { &button1, &button2, &button3, &button4 };
 const int buttonWiPins[] = {2, 5, 4, 6};
 const int wiPinsToGpio[] = {73, 70, 227, 75};
 
-void unexportButtonPins() {
+void unexportPWM(void) {
+  // Check if pwm2 exists
+  DIR* pwm2 = opendir("/sys/class/pwm/pwmchip0/pwm2");
+  if (pwm2) {
+		closedir(pwm2);
+  } else if ((errno > 0) && (errno != ENOENT)) {
+		fprintf(stderr, "Unable to open pwmchip0/pwm2\n");
+    exit(1) ;
+  }
+
+  // if exists, then unexport it
+  FILE* fd;
+	if ((fd = fopen("/sys/class/pwm/pwmchip0/unexport", "w")) == NULL) {
+    fprintf(stderr, "Unable to write to pwmchip0/unexport\n");
+    return;
+  }
+  fprintf(fd, "%d\n", 2);
+  fclose(fd);
+}
+
+void configureBacklight(void) {
+  // Export PWM2
+	FILE* fd;
+  if ((fd = fopen("/sys/class/pwm/pwmchip0/export", "w")) == NULL) {
+    fprintf(stderr, "Unable to write to pwmchip0/export\n");
+    return;
+  }
+  fprintf(fd, "%d\n", 2);
+  fclose(fd);
+}
+
+void unexportButtonPins(void) {
 	printf("Unexport button pins...\n");
 
 	FILE* fd;
@@ -128,7 +169,9 @@ int main(void) {
     exit(1);
   }
 
+  unexportPWM();
   unexportButtonPins();
+  configureBacklight();
   configureInterrupts();
 
   printf("Wait infinitely...\n");
