@@ -9,6 +9,8 @@
 #include <dirent.h>
 
 void toggleBacklight(void) {
+  printf("Backlight: toggle\n");
+
 	FILE* fd;
 
   // bl_power: /sys/class/backlight/fb_ili9341/bl_power
@@ -33,10 +35,17 @@ void toggleBacklight(void) {
   fclose(fd);
 }
 
-void backlightStepUp(void) {
+void brightnessIncrease(void) {
+  printf("Brightness: increase\n");
+
+  // Read current state
+  // Check if limit is reached
+  // If not, increase brightness level
+
 }
 
-void backlightStepDown(void) {
+void brightnessDecrease(void) {
+  printf("Brightness: decrease\n");
 }
 
 #define DEBOUNCE_TIME 500
@@ -61,7 +70,6 @@ void button1(void) {
 		return;
   }
 
-  printf("Button 1 pressed\n");
   toggleBacklight();
 }
 
@@ -70,8 +78,7 @@ void button2(void) {
     return;
   }
 
-  printf("Button 2 pressed\n");
-  backlightStepUp();
+  brightnessIncrease();
 }
 
 void button3(void) {
@@ -79,8 +86,7 @@ void button3(void) {
     return;
   }
 
-  printf("Button 3 pressed\n");
-  backlightStepDown();
+  brightnessDecrease();
 }
 
 void button4(void) {
@@ -88,7 +94,7 @@ void button4(void) {
     return;
   }
 
-  printf("Button 4 pressed\n");
+  printf("Not implemented yet\n");
 }
 
 void (*buttonFunctions[])(void) = { &button1, &button2, &button3, &button4 };
