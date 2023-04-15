@@ -6,9 +6,9 @@
 #include <limits.h>
 #include <unistd.h>
 
-const int buttonWiPins[] = {2, 4, 5, 6};
+const int buttonWiPins[] = {2, 5, 4, 6};
 
-const int pinToGpioOrangePi[] = {73, 227, 70, 75};
+const int wiPinsToGpio[] = {73, 70, 227, 75};
 
 void unexportButtonPins() {
 	printf("Unexport button pins...\n");
@@ -16,7 +16,7 @@ void unexportButtonPins() {
 	FILE* fd;
   for (int i = 0; i < sizeof(buttonWiPins) / sizeof(buttonWiPins[0]); i++) {
     int wiPin = buttonWiPins[i];
-    int gpioPin = pinToGpioOrangePi[i];
+    int gpioPin = wiPinsToGpio[i];
 
 		printf("\tpin %d (gpio: %d)\n", wiPin, gpioPin); 
 		if ((fd = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
@@ -48,7 +48,7 @@ void configureButtonModes() {
   char fName[128];
   for (int i = 0; i < sizeof(buttonWiPins) / sizeof(buttonWiPins[0]); i++) {
     int wiPin = buttonWiPins[i];
-    int gpioPin = pinToGpioOrangePi[i];
+    int gpioPin = wiPinsToGpio[i];
 
 		printf("\tpin %d (gpio: %d)\n", wiPin, gpioPin);
 
