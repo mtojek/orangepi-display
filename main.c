@@ -29,63 +29,6 @@ void unexportButtonPins() {
 	}
 }
 
-void changeOwner(char *file)
-{
-  uid_t uid = getuid();
-  uid_t gid = getgid();
-
-  if (chown(file, uid, gid) != 0) {
-
-    if (errno != ENOENT)
-      fprintf(stderr, "Unable to change ownership of %s: %s\n", file, strerror (errno));
-  }
-}
-
-void configureButtonModes() {
-  printf("Configure button modes...\n");
-
-  FILE* fd;
-  char fName[128];
-  for (int i = 0; i < sizeof(buttonWiPins) / sizeof(buttonWiPins[0]); i++) {
-    int wiPin = buttonWiPins[i];
-    int gpioPin = wiPinsToGpio[i];
-
-		printf("\tpin %d (gpio: %d)\n", wiPin, gpioPin);
-
-    // Export pin
-    if ((fd = fopen("/sys/class/gpio/export", "w")) == NULL) {
-      fprintf(stderr, "Unable to open GPIO export interface\n");
-      exit(1);
-    }
-
-    fprintf(fd, "%d\n", gpioPin);
-    fclose(fd);
-
-    // Set as input
-    sprintf(fName, "/sys/class/gpio/gpio%d/direction", gpioPin);
-    if ((fd = fopen (fName, "w")) == NULL) {
-    	fprintf(stderr, "Unable to open GPIO direction interface for pin %d: %s\n", gpioPin, strerror(errno));
-    	exit(1);
-  	}
-    fprintf(fd, "in\n");
-		fclose(fd);
-		
-		// Enable pullup resistor
-    if ((fd = fopen (fName, "w")) == NULL) {
-      fprintf (stderr, "Unable to open GPIO direction interface for pin %d: %s\n", gpioPin, strerror(errno));
-      exit(1);
-    }
-    fprintf(fd, "high\n");
-    fclose(fd);
-
-    // Change owner
-    sprintf(fName, "/sys/class/gpio/gpio%d/value", gpioPin);
-    changeOwner(fName);
-    sprintf(fName, "/sys/class/gpio/gpio%d/edge", gpioPin);
-    changeOwner(fName);
-  }	
-}
-
 void button1(void) {
   printf("Button 1 pressed\n");
 }
@@ -126,8 +69,7 @@ int main() {
     exit(1);
   }
 
-	unexportButtonPins();
-  configureButtonModes();
+  unexportButtonPins();
   configureInterrupts();
 
   printf("Wait infinitely...\n");
