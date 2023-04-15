@@ -10,6 +10,22 @@ const int buttonWiPins[] = {2, 5, 4, 6};
 
 const int wiPinsToGpio[] = {73, 70, 227, 75};
 
+void button1(void) {
+  printf("Button 1 pressed\n");
+}
+
+void button2(void) {
+  printf("Button 2 pressed\n");
+}
+
+void button3(void) {
+  printf("Button 3 pressed\n");
+}
+
+void button4(void) {
+  printf("Button 4 pressed\n");
+}
+
 void unexportButtonPins() {
 	printf("Unexport button pins...\n");
 
@@ -27,22 +43,6 @@ void unexportButtonPins() {
   	fprintf(fd, "%d\n", gpioPin);
   	fclose(fd);
 	}
-}
-
-void button1(void) {
-  printf("Button 1 pressed\n");
-}
-
-void button2(void) {
-  printf("Button 2 pressed\n");
-}
-
-void button3(void) {
-  printf("Button 3 pressed\n");
-}
-
-void button4(void) {
-  printf("Button 4 pressed\n");
 }
 
 void configureInterrupts() {
