@@ -7,6 +7,30 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+void toggleBacklight(void) {
+	FILE* fd;
+
+  // Read current state
+  if ((fd = fopen("/sys/class/backlight/fb_ili9341/bl_power", "r")) == NULL) {
+    fprintf(stderr, "Unable to read bl_power\n");
+    return;
+  }
+
+	int state = fgetc(fd);
+  fclose(fd);
+
+  // Update state
+  state = (state - 0x30) ? 0 : 1;
+
+  // Write new state
+  if ((fd = fopen("/sys/class/backlight/fb_ili9341/bl_power", "w")) == NULL) {
+  	fprintf(stderr, "Unable to write to bl_power\n");
+  	return;
+ 	}
+	fprintf(fd, "%d\n", state);
+  fclose(fd);
+}
+
 #define DEBOUNCE_TIME 150
 
 int debounceTimes[] = {0, 0, 0, 0};
@@ -30,6 +54,7 @@ void button1(void) {
   }
 
   printf("Button 1 pressed\n");
+  toggleBacklight();
 }
 
 void button2(void) {
@@ -87,7 +112,7 @@ void configureIntterupt(int buttonIndex) {
 	wiringPiISR(wiPin, INT_EDGE_FALLING, buttonFunctions[buttonIndex]);
 }
 
-void configureInterrupts() {
+void configureInterrupts(void) {
   printf("Configure interrupts...\n");
 
   for (int i = 0; i < sizeof(buttonWiPins) / sizeof(buttonWiPins[0]); i++) {
@@ -95,7 +120,7 @@ void configureInterrupts() {
   }
 }
 
-int main() {
+int main(void) {
 	printf("OrangePi Zero 2 - Display daemon\n");
 
 	if (wiringPiSetup() < 0) {
