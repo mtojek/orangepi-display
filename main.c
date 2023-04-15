@@ -117,13 +117,22 @@ void unexportPWM(void) {
 }
 
 void configureBacklight(void) {
-  // Export PWM2
 	FILE* fd;
+
+  // Export PWM2
   if ((fd = fopen("/sys/class/pwm/pwmchip0/export", "w")) == NULL) {
     fprintf(stderr, "Unable to write to pwmchip0/export\n");
     return;
   }
   fprintf(fd, "%d\n", 2);
+  fclose(fd);
+
+  // Set period
+	if ((fd = fopen("/sys/class/pwm/pwmchip0/pwm2/period", "w")) == NULL) {
+    fprintf(stderr, "Unable to write to pwm2/period\n");
+    return;
+  }
+  fprintf(fd, "%d\n", 100000);
   fclose(fd);
 }
 
