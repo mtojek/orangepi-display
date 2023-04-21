@@ -38,14 +38,85 @@ void toggleBacklight(void) {
 void brightnessIncrease(void) {
   printf("Brightness: increase\n");
 
-  // Read current state
-  // Check if limit is reached
-  // If not, increase brightness level
+	FILE* fd;
 
+  // Read current state
+	if ((fd = fopen("/sys/class/pwm/pwmchip0/pwm2/duty_cycle", "r")) == NULL) {
+    fprintf(stderr, "Unable to read pwm2/duty_cycle\n");
+    return;
+  }
+
+  int state = 0;
+  if (fscanf(fd, "%d", &state) == EOF) {
+    fclose(fd);
+
+    fprintf(stderr, "Unable to parse pwm2/duty_cycle\n");
+    return;
+  }
+
+  fclose(fd);
+  
+  // Check if limit is reached
+	if (state == 0) {
+		printf("Min brightness level\n");
+		return;
+	}
+
+  // If not, increase brightness level
+	state -= 20000;
+  if (state < 0) {
+    state = 0;
+  }
+  printf("\tduty_cycle: %d\n", state);
+
+	if ((fd = fopen("/sys/class/pwm/pwmchip0/pwm2/duty_cycle", "w")) == NULL) {
+    fprintf(stderr, "Unable to write to pwm2/enable\n");
+    return;
+  }
+  fprintf(fd, "%d\n", state);
+	fclose(fd);
 }
 
 void brightnessDecrease(void) {
   printf("Brightness: decrease\n");
+
+  FILE* fd;
+
+  // Read current state
+  if ((fd = fopen("/sys/class/pwm/pwmchip0/pwm2/duty_cycle", "r")) == NULL) {
+    fprintf(stderr, "Unable to read pwm2/duty_cycle\n");
+    return;
+  }
+
+  int state = 0;
+  if (fscanf(fd, "%d", &state) == EOF) {
+    fclose(fd);
+
+    fprintf(stderr, "Unable to parse pwm2/duty_cycle\n");
+    return;
+  }
+
+  fclose(fd);
+
+  // Check if limit is reached
+  if (state == 100000) {
+    printf("Max brightness level\n");
+    return;
+  }
+
+  // If not, increase brightness level
+  state += 20000;
+  if (state > 100000) {
+    state = 100000;
+  }
+  printf("\tduty_cycle: %d\n", state);
+
+  if ((fd = fopen("/sys/class/pwm/pwmchip0/pwm2/duty_cycle", "w")) == NULL) {
+    fprintf(stderr, "Unable to write to pwm2/enable\n");
+    return;
+  }
+  fprintf(fd, "%d\n", state);
+  fclose(fd);
 }
 
 #define DEBOUNCE_TIME 500
