@@ -7,6 +7,9 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <dirent.h>
+#include <sys/ioctl.h>
+#include <linux/tiocl.h>
+#include <fcntl.h>
 
 void toggleBacklight(void) {
   printf("Backlight: toggle\n");
@@ -25,6 +28,13 @@ void toggleBacklight(void) {
 
   // Update state
   state = (state - 0x30) ? 0 : 1;
+
+  // Setup blanking
+  int fdTTY = open("/dev/tty1", O_WRONLY + O_NOCTTY);
+  char ioctlarg = state ? TIOCL_UNBLANKSCREEN : TIOCL_BLANKSCREEN;
+  if (ioctl(fdTTY, TIOCLINUX, &ioctlarg))
+    fprintf(stderr, "Unable to set screen blanking: %s\n", strerror(errno));
+  close(fdTTY);
 
   // Write new state
   if ((fd = fopen("/sys/class/pwm/pwmchip0/pwm2/enable", "w")) == NULL) {
@@ -261,7 +271,11 @@ int main(void) {
   configureInterrupts();
 
   printf("Wait infinitely...\n");
-  for (;;) { sleep(UINT_MAX); }
+  for (;;) {
+    fflush(stdout);
+    fflush(stderr);
+    sleep(1);
+  }
   return 0;
 }
 

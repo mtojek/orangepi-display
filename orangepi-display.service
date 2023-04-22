@@ -1,0 +1,11 @@
+[Unit]
+Description=OrangePi Display
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/orangepi/orangepi-display/orangepi-display
+
+[Install]
+WantedBy=multi-user.target
+
